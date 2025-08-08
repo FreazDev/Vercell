@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch - Publicité</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            max-width: 400px;
+        }
+
+        .watch-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px 0 rgba(255, 107, 107, 0.3);
+            margin: 20px 0;
+        }
+
+        .watch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 rgba(255, 107, 107, 0.4);
+        }
+
+        .watch-btn:active {
+            transform: translateY(0);
+        }
+
+        .watch-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ad-container {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            color: #333;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .ad-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .ad-slot {
+            margin: 15px auto;
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn {
+            margin-top: 15px;
+            padding: 8px 16px;
+            background: #666;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .close-btn:hover {
+            background: #555;
+        }
+
+        .error-message {
+            color: #ff4444;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .success-message {
+            color: #44aa44;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+    
+    <!-- Google Ad Manager SDK -->
+    <script async src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
+    <script>
+        window.googletag = window.googletag || {cmd: []};
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Regarder la vidéo</h1>
+        <p>Cliquez sur le bouton pour commencer à regarder</p>
+        
+        <button class="watch-btn" id="watchBtn" onclick="showAd()">
+            ▶️ WATCH
+        </button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Chargement de la publicité...</p>
+        </div>
+
+        <div class="ad-container" id="adContainer">
+            <h3>📢 Publicité</h3>
+            
+            <!-- Slot publicitaire Google Ad Manager -->
+            <div id="div-gpt-ad-1234567890-0" class="ad-slot">
+                <div style="text-align: center; color: #888;">
+                    <p>🔄 Chargement de la publicité...</p>
+                </div>
+            </div>
+            
+            <div class="ad-info">
+                ℹ️ Publicité fournie par Google Ad Manager
+            </div>
+            
+            <div class="error-message" id="errorMessage">
+                ❌ Erreur lors du chargement de la publicité
+            </div>
+            
+            <div class="success-message" id="successMessage">
+                ✅ Publicité chargée avec succès
+            </div>
+            
+            <button class="close-btn" onclick="hideAd()">
+                Fermer la pub
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let adLoaded = false;
+        let adSlot = null;
+
+        // Configuration Google Ad Manager
+        googletag.cmd.push(function() {
+            try {
+                // Définir le slot publicitaire
+                adSlot = googletag.defineSlot('/21775744923/example_banner', [320, 250], 'div-gpt-ad-1234567890-0')
+                    .addService(googletag.pubads());
+                
+                // Configuration du service publicitaire
+                googletag.pubads().enableSingleRequest();
+                googletag.pubads().collapseEmptyDivs();
+                googletag.pubads().setTargeting('page_type', 'watch');
+                
+                // Événements pour suivre le chargement des pubs
+                googletag.pubads().addEventListener('slotRenderEnded', function(event) {
+                    console.log('Publicité rendue:', event);
+                    if (event.slot === adSlot) {
+                        if (event.isEmpty) {
+                            showError('Aucune publicité disponible');
+                        } else {
+                            showSuccess('Publicité chargée');
+                            adLoaded = true;
+                        }
+                    }
+                });
+
+                googletag.pubads().addEventListener('slotRequested', function(event) {
+                    console.log('Publicité demandée:', event);
+                });
+
+                googletag.pubads().addEventListener('impressionViewable', function(event) {
+                    console.log('Publicité visible:', event);
+                });
+
+                // Activer le service
+                googletag.enableServices();
+                
+                console.log('Google Ad Manager initialisé avec succès');
+            } catch (error) {
+                console.error('Erreur lors de l\'initialisation d\'Ad Manager:', error);
+                showError('Erreur d\'initialisation');
+            }
+        });
+
+        function showAd() {
+            const watchBtn = document.getElementById('watchBtn');
+            const loading = document.getElementById('loading');
+            
+            // Désactiver le bouton et afficher le chargement
+            watchBtn.disabled = true;
+            watchBtn.style.display = 'none';
+            loading.style.display = 'block';
+            
+            // Réinitialiser les messages
+            hideMessages();
+            
+            // Charger la publicité
+            setTimeout(() => {
+                try {
+                    googletag.cmd.push(function() {
+                        googletag.display('div-gpt-ad-1234567890-0');
+                    });
+                    
+                    // Afficher le conteneur de pub après un délai
+                    setTimeout(() => {
+                        loading.style.display = 'none';
+                        document.getElementById('adContainer').style.display = 'block';
+                        
+                        // Si aucune pub n'est chargée après 5 secondes, afficher une erreur
+                        setTimeout(() => {
+                            if (!adLoaded) {
+                                showError('Délai d\'attente dépassé pour le chargement de la publicité');
+                            }
+                        }, 5000);
+                    }, 1500);
+                    
+                } catch (error) {
+                    console.error('Erreur lors du chargement de la pub:', error);
+                    loading.style.display = 'none';
+                    showError('Erreur technique');
+                    resetWatchButton();
+                }
+            }, 1000);
+        }
+
+        function hideAd() {
+            document.getElementById('adContainer').style.display = 'none';
+            resetWatchButton();
+            adLoaded = false;
+            hideMessages();
+        }
+
+        function resetWatchButton() {
+            const watchBtn = document.getElementById('watchBtn');
+            watchBtn.disabled = false;
+            watchBtn.style.display = 'inline-block';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = '✅ ' + message;
+            successDiv.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        // Alternative avec votre ID AdMob (pour référence mobile)
+        function initAdMobAlternative() {
+            /* 
+            Pour une intégration AdMob mobile, vous utiliseriez:
+            
+            App ID: ca-app-pub-8997142329340010~2274561468
+            Ad Unit ID: ca-app-pub-8997142329340010/8887253033
+            
+            Mais pour le web, on utilise Google Ad Manager (GPT) comme ci-dessus.
+            */
+            console.log('IDs AdMob pour mobile:', {
+                appId: 'ca-app-pub-8997142329340010~2274561468',
+                adUnitId: 'ca-app-pub-8997142329340010/8887253033'
+            });
+        }
+
+        // Initialiser l'alternative au chargement de la page
+        initAdMobAlternative();
+    </script>
+</body>
+</html>
